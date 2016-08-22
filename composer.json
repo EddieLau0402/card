@@ -1,0 +1,19 @@
+{
+    "name": "eddie/card",
+    "description": "Laravel 会员卡密提取,源慧",
+    "keywords": ["Laravel5","源慧","会员卡密提取"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Eddie",
+            "email": "277676978@qq.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Eddie\\Card\\": "src"
+        }
+    },
+    "minimum-stability": "dev"
+}
