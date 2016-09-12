@@ -8,17 +8,17 @@ return [
         /*
          * 客户/账号
          */
-        'cid' => env('YUANHUI_CID'),
+        'cid' => env('YUANHUI_CID', ''),
 
         /*
          * 获取 API 校验
          */
-        'appkey' => env('YUANHUI_APP_KEY'),
+        'appkey' => env('YUANHUI_APP_KEY', ''),
 
         /*
          * 服务地址
          */
-        'url' => env('YUANHUI_API_DOMAIN'),
+        'url' => env('YUANHUI_API_DOMAIN', 'http://i.eswapi.com/API/'),
 
         /*
          * 资源 :
