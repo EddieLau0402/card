@@ -5,7 +5,7 @@ namespace Eddie\Card;
 
 use Illuminate\Support\ServiceProvider;
 
-class CardServiceProvider extends ServiceProvider
+class CardServiceProviderForLumen extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.
@@ -22,7 +22,7 @@ class CardServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->handleConfigs();
+//        $this->handleConfigs();
         // $this->handleMigrations();
         // $this->handleViews();
          $this->handleTranslations();
