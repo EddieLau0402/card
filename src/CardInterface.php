@@ -16,6 +16,13 @@ interface CardInterface
     /**
      * 充值卡密提取.
      *
+     * @return array
+     */
+    public function exchange();
+
+    /**
+     * 返回结果格式化
+     *
      * 应该返回标准格式:
      *     [
      *          'provider' => string,  // 服务供应商
@@ -27,8 +34,7 @@ interface CardInterface
      *          'password' => string   // 密码
      *     ]
      *
-     *
-     * @return array
+     * @return mixed
      */
-    public function exchange();
+    public function transform($response);
 }

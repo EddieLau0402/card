@@ -22,49 +22,56 @@ class Yuanhui implements CardInterface
      *
      * @var
      */
-    protected $_server;
+    protected $server;
 
     /**
      * 获取 API 校验
      *
      * @var
      */
-    protected $_appkey;
+    protected $appkey;
 
     /**
      * 客户/账号
      *
      * @var
      */
-    protected $_cid;
+    protected $cid;
 
     /**
      * 资源
      *
      * @var
      */
-    protected $_resource;
+    protected $resource;
+
+    /**
+     * 调试开关
+     *
+     * @var bool
+     */
+    protected $debug_mode = false;
 
     /**
      * 订单流水号
      *
      * @var
      */
-    protected $_order_id;
+    protected $order_id;
 
     /**
      * 手机号
      *
      * @var
      */
-    protected $_mobile;
+    protected $mobile;
 
     /**
      * 会员充值卡
      *
      * @var
      */
-    protected $_card;
+    protected $card;
 
 
     /**
@@ -89,10 +96,24 @@ class Yuanhui implements CardInterface
             throw new \Exception('缺少url参数', 500);
 
 
-        $this->_server = $config['url'];
-        $this->_appkey = $config['appkey'];
-        $this->_cid = $config['cid'];
-        $this->_resource = $config['resource'];
+        $this->server = $config['url'];
+        $this->appkey = $config['appkey'];
+        $this->cid = $config['cid'];
+        $this->resource = $config['resource'];
+    }
+
+
+    /**
+     * Open debug mode.
+     *
+     * @author Eddie
+     *
+     * @return $this
+     */
+    public function debug()
+    {
+        $this->debug_mode = true;
+        return $this;
     }
 
 
@@ -106,7 +127,7 @@ class Yuanhui implements CardInterface
      */
     public function mobile($mobile)
     {
-        $this->_mobile = $mobile;
+        $this->mobile = $mobile;
         return $this;
     }
 
@@ -118,13 +139,13 @@ class Yuanhui implements CardInterface
      */
     public function orderId($order_id)
     {
-        $this->_order_id = $order_id;
+        $this->order_id = $order_id;
         return $this;
     }
 
     public function card($card)
     {
-        $this->_card = $card;
+        $this->card = $card;
         return $this;
     }
 
@@ -134,37 +155,45 @@ class Yuanhui implements CardInterface
      */
     public function exchange($card = null)
     {
-        if (!$this->_order_id) {
+        if (!$this->order_id) {
             throw new \Exception('订单号不能为空', 422);
         }
-        if (!$this->_mobile) {
+        if (!$this->mobile) {
             throw new \Exception('手机号不能为空', 422);
         }
-        if (!$this->_card) {
+        if (!$this->card) {
             if (!$card) {
-                throw new \Exception('会员充值卡不能为空', 422);
+                throw new \Exception('充值卡不能为空', 422);
             }
             $this->card($card);
         }
 
         $params = [
-            'cid' => $this->_cid,
-            'productid' => $this->__getProductId(),
-            'orderid' => $this->_order_id,
-            'mob' => $this->_mobile,
-            'timestamps' => $this->__getMsec() // 精确到毫秒
+            'cid' => $this->cid,
+            'productid' => $this->getProductId(),
+            'orderid' => $this->order_id,
+            'mob' => $this->mobile,
+            'timestamps' => $this->getMsec() // 精确到毫秒
         ];
 
         /*
          * 签名
          */
-        $params['sign'] = $this->__signature($params);
+        $params['sign'] = $this->signature($params);
 
-        $url = $this->_server . self::API_CARD_GET;
+        $url = $this->server . self::API_CARD_GET;
 
         $response = $this->request($url, $params, 'POST');
 
-        return $this->_parse($response);
+        if ($this->debug_mode) {
+            \Log::info('-------------------------------------------------');
+            \Log::info('Request API: '.$url);
+            \Log::info('Request params: '. print_r($params, true));
+            \Log::info('Response: '. print_r(json_decode($response, true), true));
+            \Log::info('-------------------------------------------------');
+        }
+
+        return $this->transform($response);
     }
 
     /**
@@ -175,7 +204,7 @@ class Yuanhui implements CardInterface
      * @param $response
      * @return array $return
      */
-    private function _parse($response)
+    public function transform($response)
     {
         $result = json_decode($response);
 
@@ -211,7 +240,7 @@ class Yuanhui implements CardInterface
      * @param $params
      * @return string
      */
-    private function __signature($params)
+    private function signature($params)
     {
         /*
          * 去除 非必选参数
@@ -222,7 +251,7 @@ class Yuanhui implements CardInterface
          * Generate signature.
          */
         $signArr = array_values($params);
-        $signArr[] = $this->_appkey;
+        $signArr[] = $this->appkey;
         sort($signArr, SORT_STRING);
 
         return strtoupper(md5(implode($signArr)));
@@ -235,7 +264,7 @@ class Yuanhui implements CardInterface
      *
      * @return bool|string
      */
-    private function __getMsec()
+    private function getMsec()
     {
         list($msec, $sec) = explode(' ', microtime());
 
@@ -249,12 +278,12 @@ class Yuanhui implements CardInterface
      *
      * @return $productid
      */
-    private function __getProductId()
+    private function getProductId()
     {
-        if ($this->_card) {
-            $arr = array_flip($this->_resource);
-            if (array_key_exists($this->_card, $arr)) {
-                return $arr[$this->_card];
+        if ($this->card) {
+            $arr = array_flip($this->resource);
+            if (array_key_exists($this->card, $arr)) {
+                return $arr[$this->card];
             }
             else {
                 throw new \Exception('没有对应的资源!', 500);
